@@ -1,0 +1,11 @@
+ipykernel
+tqdm
+pyarrow
+numpy
+pandas
+matplotlib
+seaborn
+river
+mljar-supervised
+requests
+gdown
