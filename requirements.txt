@@ -9,3 +9,4 @@ river
 mljar-supervised
 requests
 gdown
+pyswarms

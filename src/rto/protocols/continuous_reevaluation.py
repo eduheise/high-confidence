@@ -9,7 +9,7 @@ class ContinuousReevaluation:
     """Base class for experimentation of the adaptive threshold methods.
     """
 
-    def __init__(self, streamer, models=[], delay_s=3600):
+    def __init__(self, streamer, models=[], delay_s=3600, verbose=True):
         """Set/initialize parameters.
         Args:
             streamer (Streamer): Instance of a streamer which has been initialized.
@@ -19,6 +19,7 @@ class ContinuousReevaluation:
         self.streamer = streamer
         self.models = models
         self.delay = delay_s * 1000
+        self.verbose = verbose
 
     def fit(self, events, timestamp_col='timestamp'):
         """Models are incrementally updated using events.
@@ -27,7 +28,8 @@ class ContinuousReevaluation:
             events (pd.DataFrame): Events returned by the BaseC4i0DB.
             timestamp_col (str, optional): Column representing the timestamp. Defaults to 'timestamp'.
         """
-        print("Fit validation started..")
+        if self.verbose:
+            print("Fit validation started..")
         try:
             events = events.sort_values(by=timestamp_col)
         except KeyError as e:
@@ -36,8 +38,9 @@ class ContinuousReevaluation:
         # make initial status for batch training
         self._validate()
 
-        print("Updating model with training instances..")
-        for e in tqdm(events.iterrows(), total=events.shape[0]):
+        if self.verbose:
+            print("Updating model with training instances..")
+        for e in tqdm(events.iterrows(), total=events.shape[0], disable=not self.verbose):
             self._update([e[1]])
 
     def evaluate(self, events, timestamp_col='timestamp'):
@@ -54,10 +57,11 @@ class ContinuousReevaluation:
 
  
         responses = []
-        print("Prequential evaluation started...")
+        if self.verbose:
+            print("Prequential evaluation started...")
         last_eval = -np.inf
         train_queue = []
-        for e in tqdm(events.iterrows(), total=events.shape[0]):
+        for e in tqdm(events.iterrows(), total=events.shape[0], disable=not self.verbose):
             response = self._evaluate(e[1])
             response['timestamp'] = e[1]['timestamp']
             responses.append(response)
@@ -69,7 +73,8 @@ class ContinuousReevaluation:
         return pd.DataFrame(responses)
 
     def _validate(self):
-        print(f"Validating models {self.models}")
+        if self.verbose:
+            print(f"Validating models {self.models}")
         
         for model in self.models:
             self.streamer.register(model)
